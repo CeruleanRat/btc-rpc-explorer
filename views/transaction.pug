@@ -430,3 +430,34 @@ block endOfBody
 				}
 			});
 		});
+
+	if (autoRefresh == "on" && result && result.getrawtransaction && (!result.getrawtransaction.confirmations || result.getrawtransaction.confirmations == 0))
+		script.
+			var pageLoadTime = new Date();
+			// Querying the current block height here is racy - the transaction might have confirmed already but
+			// we won't notice until the next block. I am not sure if there's a nice way to avoid this.
+			var currentBlockHeight = -1;
+			function checkRefresh() {
+				// H/T: https://learnwithparam.com/blog/how-to-handle-fetch-errors/
+				fetch('/api/blocks/tip/height')
+					.then((response) => {
+						if (response.status >= 200 && response.status <= 299) {
+							return response.json();
+						} else {
+							throw Error(response.statusText);
+						}
+					})
+				.then((newBlockHeight) => {
+					// Refresh the page if the block height has changed.
+					if (currentBlockHeight == -1) {
+						currentBlockHeight = newBlockHeight;
+					}
+					if (newBlockHeight != currentBlockHeight) {
+						window.location.reload();
+					}
+				}).catch((error) => {
+					// Not much we can do; just ignore it.
+				});
+				setTimeout(checkRefresh, 10 * 1000);
+			};
+			checkRefresh();
