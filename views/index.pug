@@ -98,6 +98,9 @@ block content
 
 
 		
+		//- If auto-refresh is on, we might have a connection to the node *now* but we might lose it later as we try checking for new blocks, so we need to include an (initially invisible) connection warning element.
+		if (userSettings.autoRefresh == "on")
+			include includes/connection-warning.pug
 		include includes/index-network-summary.pug
 		
 		

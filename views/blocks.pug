@@ -20,6 +20,11 @@ block content
 							a.page-link(href=(sort == "asc" ? "javascript:void(0)" : `./blocks?limit=${limit}&offset=0&sort=asc`))
 								span(aria-hidden="true") Oldest blocks first
 
+	//- If currentBlockHeight is defined, we will auto-refresh when new blocks arrive, so we need the ability to
+	//- show a warning if we lose our connection and can't check for new blocks.
+	if (currentBlockHeight !== undefined)
+		include includes/connection-warning.pug
+
 	if (blocks)
 		+contentSection
 			include includes/blocks-list.pug

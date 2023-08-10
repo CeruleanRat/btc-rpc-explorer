@@ -630,6 +630,18 @@ mixin timeAgo(timeAgoTime, options={oneElement:false, agoText:true})
 	- let hideHoverText = false;
 	if (options && "hideHoverText" in options)
 		- hideHoverText = options.hideHoverText;
+
+	//- Only some timeAgo values are dynamic even if auto refresh is on.  By
+	//- not treating things like the (typically large) time to next block
+	//- halving as dynamic, we avoid problems with our workaround for not
+	//- having "moments" on the client side.
+	- let dynamic = false;
+	if (options && "dynamic" in options)
+		- dynamic = options.dynamic && (userSettings.autoRefresh == "on");
+
+	- let latestBlock = false;
+	if (options && "latestBlock" in options)
+		- latestBlock = options.latestBlock && (userSettings.autoRefresh == "on");
 	
 	- let utcMoment = moment.utc(new Date(parseInt(timeAgoTime) * 1000));
 	- let timeAgo = moment.duration(moment.utc(new Date()).diff(utcMoment));
@@ -639,36 +651,50 @@ mixin timeAgo(timeAgoTime, options={oneElement:false, agoText:true})
 		- future = true;
 		- timeAgo = moment.duration(moment.utc(new Date(parseInt(timeAgoTime) * 1000)).diff(moment.utc(new Date())));
 
+	if (!dynamic)
 
-	if (future)
-		span +
+		if (future)
+			span +
 
-		
-	if (timeAgo.asHours() < 1)
-		if (timeAgo.asMinutes() < 1)
-			span #{timeAgo.seconds()}s
-		else
-			span #{timeAgo.minutes()}m
 
-	else
-		if (timeAgo.asHours() >= 1 && timeAgo.asHours() < 24)
-			span #{timeAgo.hours()}h
-
-			if (!oneElement && timeAgo.minutes() > 0)
-				span.ms-1 #{timeAgo.minutes()}m
-
-		else
-			if (oneElement)
-				if (hideHoverText)
-					span #{utils.summarizeDuration(timeAgo, options)}
-				else
-					span.border-dotted(title=`${utils.summarizeDuration(timeAgo)}<br>${utcMoment.format("Y-MM-DD HH:mm:ss")} utc`, data-bs-toggle="tooltip", data-bs-html="true") #{utils.summarizeDuration(timeAgo, options)}
+		if (timeAgo.asHours() < 1)
+			if (timeAgo.asMinutes() < 1)
+				span #{timeAgo.seconds()}s
 			else
-				span #{utils.summarizeDuration(timeAgo, options)}
+				span #{timeAgo.minutes()}m
 
-	if (!future && agoText)
-		|  ago
+		else
+			if (timeAgo.asHours() >= 1 && timeAgo.asHours() < 24)
+				span #{timeAgo.hours()}h
 
+				if (!oneElement && timeAgo.minutes() > 0)
+					span.ms-1 #{timeAgo.minutes()}m
+
+			else
+				if (oneElement)
+					if (hideHoverText)
+						span #{utils.summarizeDuration(timeAgo, options)}
+					else
+						span.border-dotted(title=`${utils.summarizeDuration(timeAgo)}<br>${utcMoment.format("Y-MM-DD HH:mm:ss")} utc`, data-bs-toggle="tooltip", data-bs-html="true") #{utils.summarizeDuration(timeAgo, options)}
+				else
+					span #{utils.summarizeDuration(timeAgo, options)}
+
+		if (!future && agoText)
+			|  ago
+	else
+		if (timeAgo.asHours() < 1)
+			if (timeAgo.asMinutes() < 1)
+				span(id="timeAgo", data-timeagotime=timeAgoTime.toString(), data-latestblock=latestBlock.toString()) #{timeAgo.seconds()}s
+			else
+				span(id="timeAgo", data-timeagotime=timeAgoTime.toString(), data-latestblock=latestBlock.toString()) #{timeAgo.minutes()}m
+		else
+			if (timeAgo.asHours() >= 1 && timeAgo.asHours() < 24)
+				if (timeAgo.minutes() == 0)
+					span(id="timeAgo", data-timeagotime=timeAgoTime.toString(), data-latestblock=latestBlock.toString()) #{timeAgo.hours()}h
+				else
+					span(id="timeAgo", data-timeagotime=timeAgoTime.toString(), data-latestblock=latestBlock.toString()) #{timeAgo.hours()}h #{timeAgo.minutes()}m
+			else
+				span(id="timeAgo", data-timeagotime=timeAgoTime.toString(), data-latestblock=latestBlock.toString()) #{utils.summarizeDuration(timeAgo, options)}
 
 
 mixin darkBadge(text)

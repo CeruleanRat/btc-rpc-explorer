@@ -225,7 +225,8 @@ router.get("/", asyncHandler(async (req, res, next) => {
 
 
 		await utils.timePromise("homepage.render", async () => {
-			res.render("index");
+			// periodicRefresh is used to tell the block list to refresh the page every five minutes if auto-refresh is on, not just when a new block is seen. This forces a refresh of the network summary at the top of the index page.
+			res.render("index", {"currentBlockHeight":currentBlock.height, "periodicRefresh":true});
 		}, perfResults);
 
 		next();
@@ -581,7 +582,13 @@ router.get("/blocks", asyncHandler(async (req, res, next) => {
 		await utils.awaitPromises(promises);
 
 		await utils.timePromise("blocks.render", async () => {
-			res.render("blocks");
+			// If auto-refresh is on and this page shows the latest block at the top, provide the current block
+			// height so the page can compared it against the current block height and decide to auto-refresh
+			// when a new block arrives.
+			if (res.locals.autoRefresh == "on" && offset == 0 && sort == "desc")
+				res.render("blocks", {"currentBlockHeight":getblockchaininfo.blocks});
+			else
+				res.render("blocks");
 		}, perfResults);
 
 		next();
